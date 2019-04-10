@@ -1,4 +1,4 @@
-from contamehistorias.datasources.ArquivoPT import ArquivoPT
+from contamehistorias.datasources.webarchive import ArquivoPT
 from contamehistorias.engine import TemporalSummarizationEngine
 from datetime import datetime
 
@@ -17,6 +17,6 @@ search_result = apt.getResult(query=query, **params)
 print('Compute important dates')
 #instantiate temporal summarization class
 cont = TemporalSummarizationEngine()
-intervals = cont.build_intervals(search_result, language, query)
+intervals = cont.build_intervals(search_result, language)
 
 cont.pprint(intervals)
