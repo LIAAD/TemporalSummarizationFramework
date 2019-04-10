@@ -233,6 +233,8 @@ Options:
 ```
 
 ## Contact
-admin@contamehistorias.pt
+arrp@inesctec.pt
+vitordouzi@gmail.com
+ricardo.campos@ipt.pt
 
 Developed by researchers from Laboratório de Inteligência Artificial e Apoio a Decisão (LIAAD - INESCTEC), and affiliated to Instituto Politécnico de Tomar ; Universidade do Porto; Universidade de Kyoto
