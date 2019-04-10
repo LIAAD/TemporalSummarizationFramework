@@ -1,0 +1,55 @@
+INESC TEC Temporal Summarization Framework License Agreement
+
+Copyright (C) 2019, INESC TEC
+
+INESC TEC Temporal Summarization Framework is a collection-independent automatic temporal summarization framework: a novel feature-based system for multi-lingual temporal summarization framework, which supports texts of different sizes, domain or languages. INESC TEC Temporal Summarization Framework does not rely on dictionaries nor thesauri, neither is trained against any corpora. Instead, we follow an unsupervised approach which builds upon features extracted from the text and change-point detection methods to find relevant documents and dates to provide a timeline of documents.
+
+This software is authored by:
+R. Campos
+A. Pasquali
+V. Mangaravite
+
+All files in this distribution are part of INESC TEC Temporal Summarization Framework.
+INESC TEC Temporal Summarization Framework is distributed under the terms of the INESC TEC Non-Commercial License Agreement or under the terms of a Software Usage Agreement from INESC TEC. The latter is a separate contract document.
+
+The INESC TEC Non-Commercial License Agreement is a non-free license that grants you the right to use INESC TEC Temporal Summarization Framework for educational, research or evaluation purposes only, but prohibits any commercial use.
+
+For commercial use you need a Software Usage Agreement from INESC TEC.
+You can reach INESC TEC at info@inesctec.pt, or
+Campus da Faculdade de Engenharia da Universidade do Porto
+Rua Dr. Roberto Frias
+4200-465 Porto
+Portugal
+
+
+INESC TEC Non-Commercial License Agreement for INESC TEC Temporal Summarization Framework
+
+1. Background: INESC TEC - INSTITUTO DE ENGENHARIA DE SISTEMAS E COMPUTADORES, TECNOLOGIA E CIÊNCIA (the "Provider") developed the INESC TEC Temporal Summarization Framework (the "Software") and seeks to distribute the Software for public use and benefit.
+
+2. Grant: The Provider hereby grants to you a revocable, nonexclusive, nontransferable, royalty-free and worldwide license (the "License") to use the Software solely for educational, research, or evaluation purposes, in accordance with Paragraph 3 below and subject to the terms and conditions of this License Agreement (the "Agreement"). The License entitles you to use the Software to conduct research or education.
+
+3. Limitations on Derivative Works: You may not perform modifications to the Software. Derivative Works are not allowed (A "Derivative Work" is a work that is a modification of, enhancement to, derived from, or based upon the Software).
+
+4. Limitations on Use: The License is limited to noncommercial use. Noncommercial use relates only to educational, research, personal or evaluation purposes. Any other use is commercial use. You may not use the Software in connection with any activities which purpose is to procure a commercial gain to you or others.
+
+5. Limitations on Distribution: If you distribute the Software, you will distribute them under the same terms and conditions as in this License, and you will not grant other rights to the Software that are different from those provided by this License.
+
+6. Ownership: The Software and the accompanying documentation are licensed, not sold, to you. The Software is a proprietary product of the Provider and is protected under Portuguese copyright law and international treaty revisions. The Provider retains all rights not specifically granted to you hereunder, including ownership of the Software and all copyrights, trade secrets, or other intellectual property rights in the Software and any accompanying information.
+
+7. Publication Credit: You agree to acknowledge the INESC TEC Temporal Summarization Framework research project with appropriate citations in any publication or presentation containing research results obtained in whole or in part through the use of the Software. Specifically, you agree to cite:
+“Campos, R., Mangaravite, V., Pasquali, A., Jorge, A., Nunes, C., & Jatowt, A. (2018). A Text Feature Based Automatic Keyword Extraction Method for Single Documents Proceedings of the 40th European Conference on Information Retrieval (ECIR'18), Grenoble, France. March 26 – 29.“, and
+“Campos, R., Mangaravite, V., Pasquali, A., Jorge, A., Nunes, C., & Jatowt, A. (2018). YAKE! Collection-independent Automatic Keyword Extractor Proceedings of the 40th European Conference on Information Retrieval (ECIR'18), Grenoble, France. March 26 – 29”.
+“Pasquali, A., Mangaravite, V., Campos, R.,  Jorge, A., Nunes, C., & Jatowt, A. (2019). Interactive System for Automatically Generating Temporal Narratives Proceedings of the 41st European Conference on Information Retrieval (ECIR'19), Cologne, Germany. April 14 – 18”.
+
+8. Term of License: The License is effective upon receipt by you of the Software and shall continue until terminated. The License will terminate immediately without notice by the Provider if you fail to comply with the terms and conditions of this Agreement. Upon termination of this License, you shall immediately discontinue all use of the Software provided hereunder, and return to the Provider or destroy the original and all copies of all such Software. All of your obligations under this Agreement shall survive the termination of the License.
+
+9. Warranty: THE PROVIDER MAKES NO REPRESENTATIONS ABOUT THE SUITABILITY, USE, OR PERFORMANCE OF THIS SOFTWARE OR ABOUT ANY CONTENT OR INFORMATION MADE ACCESSIBLE BY THE SOFTWARE, FOR ANY PURPOSE. THE SOFTWARE IS PROVIDED "AS IS," WITHOUT EXPRESS OR IMPLIED WARRANTIES INCLUDING, BUT NOT LIMITED TO, ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR NONINFRINGEMENT OF THIRD PARTY RIGHTS WITH RESPECT TO THE SOFTWARE. THE PROVIDER IS NOT OBLIGATED TO SUPPORT OR ISSUE UPDATES TO THE SOFTWARE OR PROVIDE ANY TYPE OF MAINTENANCE SERVICES.
+
+10. Limitation on Liability: This Software is provided free of charge and, accordingly, the Provider shall not be liable under any theory for any damages suffered by you or any user of the Software. UNDER NO CIRCUMSTANCES SHALL PROVIDER BE LIABLE TO YOU OR ANY OTHER PERSON FOR ANY DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES OF ANY CHARACTER INCLUDING, WITHOUT LIMITATION, DAMAGES FOR LOSS OF GOODWILL, WORK STOPPAGE, COMPUTER FAILURE OR MALFUNCTION, OR ANY AND ALL OTHER ECONOMIC LOSS OR COMMERCIAL DAMAGES ARISING OUT OF THE USE OR INABILITY TO USE THIS SOFTWARE, EVEN IF PROVIDER SHALL HAVE BEEN INFORMED OF THE POSSIBILITY OF SUCH DAMAGES, OR FOR ANY THIRD-PARTY CLAIMS.
+
+11. Governing law and jurisdiction: The Agreement shall in all respects be governed by and interpreted, construed and enforced 
+in accordance  with  the  laws  of Portugal. The Parties agree to endeavor to settle the disagreements or disputes that may arise during the performance of the Agreement out-of-court. In the absence of an out-of-court settlement within two (2) months as from their occurrence, the disagreements or disputes shall be solely submitted to and finally settled by the competent Courts of Portugal.
+
+12. Entire Agreement: This Agreement contains the entire agreement between the parties with respect to the subject matter hereof, and it shall not be modified or amended except by the authors of the License, that reserve the right to periodically publish updates or new versions of the Agreement, each with a separate number.
+
+13. The unenforceability or invalidity of any part of this Agreement will not affect the enforceability or validity of the remaining parts.
