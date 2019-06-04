@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from .models import *
 import requests
+import time
 
 class BingNewsSearchAPI(BaseDataSource):
 	URL_REQUEST = 'https://api.cognitive.microsoft.com/bing/v7.0/news/search'
