@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from .models import *
 import requests
+import time
 
 class BingNewsSearchAPI(BaseDataSource):
 	URL_REQUEST = 'https://api.cognitive.microsoft.com/bing/v7.0/news/search'
@@ -8,7 +9,10 @@ class BingNewsSearchAPI(BaseDataSource):
 	def __init__(self, api_key, processes=4):
 		BaseDataSource.__init__(self, 'BingNewsSearchAPI')
 		self.api_key = api_key
+		
 		self.processes = processes		
+		self.headers = {"Ocp-Apim-Subscription-Key" : api_key}
+		self.max_documents = 2000
 
 	def parse_news_article(self, item):
 		
@@ -51,7 +55,7 @@ class BingNewsSearchAPI(BaseDataSource):
 		
 			if(page % 3 == 0):
 				print("sleep")
-				time.sleep(1)
+				time.sleep(0.5)
 		
 			response = requests.get(BingNewsSearchAPI.URL_REQUEST, headers=self.headers, params=params)
 			response.raise_for_status()
@@ -59,5 +63,9 @@ class BingNewsSearchAPI(BaseDataSource):
 
 			for article in search_results["value"]:
 				results.append(self.parse_news_article(article))
+
+			if(len(results) > self.max_documents ):
+				
+				break
 
 		return results
