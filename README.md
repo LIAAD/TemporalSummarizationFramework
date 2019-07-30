@@ -238,3 +238,6 @@ vitordouzi@gmail.com
 ricardo.campos@ipt.pt
 
 Developed by researchers from Laboratório de Inteligência Artificial e Apoio a Decisão (LIAAD - INESCTEC), and affiliated to Instituto Politécnico de Tomar ; Universidade do Porto; Universidade de Kyoto
+
+## Cite
+Pasquali A., Mangaravite V., Campos R., Jorge A.M., Jatowt A. (2019) Interactive System for Automatically Generating Temporal Narratives. In Advances in Information Retrieval. ECIR 2019. Lecture Notes in Computer Science, vol 11438. Springer, Cham
