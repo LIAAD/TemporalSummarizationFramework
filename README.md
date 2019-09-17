@@ -241,3 +241,6 @@ Developed by researchers from Laboratório de Inteligência Artificial e Apoio a
 
 ## Cite
 Pasquali A., Mangaravite V., Campos R., Jorge A.M., Jatowt A. (2019) Interactive System for Automatically Generating Temporal Narratives. In Advances in Information Retrieval. ECIR 2019. Lecture Notes in Computer Science, vol 11438. Springer, Cham
+
+## APP
+Conta-me Histórias / Tell me Stories is now available on (Google Play)[https://play.google.com/store/apps/details?id=com.app.projetofinal]
