@@ -1,5 +1,14 @@
 # Conta-me Historias Temporal Summarization
-This package can retrive articles from Arquivo.pt web archive and produce a temporal summarization.
+Conta-me Histórias / Tell me Stories is a temporal summarization framework of news articles that allows users to explore and revisit events in the past. Built on top of the Portuguese web archive [http://arquivo.pt], it can be extended to support different datasets, including traditional media such as Reuters, Bloomberg, etc. Unlike, the Portuguese version (which runs on top of the Portuguese Web Archive), the English version of this App uses Bing News Search API to create narratives.
+
+## Contributions
+During the last decade, we have been witnessing an ever-growing number of online contents posing new challenges for those who aim to understand a given event. This exponential growth of the volume of data, together with the phenomenon of media bias, fake news and filter bubbles, has contributed to the creation of new challenges in information access and transparency. One possible approach to overcome this problem is to automatically summarize large amount of news into consistent narratives. Tell me Stories emerges in this context, as an important contribution for anyone interested in having access to the overall picture of a given event in a quick manner. Our project may be considered as an additional solution that allows the general public (students, journalists, politics, researchers, etc) to better explore any kind of data that has been covered by the media. 
+
+## How does it works?
+Tell me Stories collects information from web archives (such as the Arquivo.pt) or media outlets (such as Reuters, Bloomberg or Bing News) and provides a full-text search service that enables the retrieval of past (to present) information. To select relevant stories of different time-periods, we rely on YAKE! [http://yake.inesctec.pt] a keyword extraction algorithm developed by our research team, which selects the most important excerpts (namely text titles) of a topic over time, to present to the user.
+
+## Where can I find Conta-me Histórias/Tell me Stories?
+Tell me Stories is available online [http://contamehistorias.pt; http://tellmestories.pt], on [Google Play](https://play.google.com/store/apps/details?id=com.app.projetofinal), as an open source Python package [https://github.com/LIAAD/TemporalSummarizationFramework] and as an [API](http://contamehistorias.inesctec.pt/arquivopt/apidocs#/default/get_api_v1_search).
 
 ## Install
 Requires Python 3
@@ -239,8 +248,8 @@ ricardo.campos@ipt.pt
 
 Developed by researchers from Laboratório de Inteligência Artificial e Apoio a Decisão (LIAAD - INESCTEC), and affiliated to Instituto Politécnico de Tomar ; Universidade do Porto; Universidade de Kyoto
 
-## Cite
-Pasquali A., Mangaravite V., Campos R., Jorge A.M., Jatowt A. (2019) Interactive System for Automatically Generating Temporal Narratives. In Advances in Information Retrieval. ECIR 2019. Lecture Notes in Computer Science, vol 11438. Springer, Cham
+## Please cite the following works when using Conta-me Histórias/Tell me Stories
+Pasquali, A., Mangaravite, V., Campos, R., Jorge, A., and Jatowt, A. (2019). Interactive System for Automatically Generating Temporal Narratives. In: Azzopardi L., Stein B., Fuhr N., Mayr P., Hauff C., Hiemstra D. (eds), Advances in Information Retrieval. ECIR'19 (Cologne, Germany. April 14 – 18). Lecture Notes in Computer Science, vol 11438, pp. 251 - 255. Springer. [pdf](https://link.springer.com/chapter/10.1007/978-3-030-15719-7_34)
 
-## APP
-Conta-me Histórias / Tell me Stories is now available on (Google Play)[https://play.google.com/store/apps/details?id=com.app.projetofinal]
+## Awards
+Conta-me Histórias / Tell me Stories won the Arquivo.pt 2018 contest [https://sobre.arquivo.pt/en/arquivo-pt-2018-award-winners/] and has been awarded the Best Demo Presentation at ECIR’19 [http://www.ecir2019.org].
