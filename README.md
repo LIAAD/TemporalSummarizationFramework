@@ -17,58 +17,9 @@ Requires Python 3
  pip install git+https://github.com/LIAAD/TemporalSummarizationFramework.git
  ```
 
-## Using terminal
+## Usage (Python)
 
-Accessing client help
-
-```bash
-
-> contamehistorias --help
-
-Usage: contamehistorias [OPTIONS]
-
-  Console script for tempsummarization.
-
-Options:
-  --query TEXT       Perform news retrieval with informed query
-  --language TEXT    Expected language in headlines
-  --start_date DATE  Perform news retrieval since this date
-  --end_date DATE    Perform news retrieval until this date
-  --domains TEXT     Comma separated list of domains
-                     (www.publico.pt,www.dn.pt)
-  --verbose
-  --help             Show this message and exit.
-```
-
-Running your query. You can specify start_date and end_date using date format (dd/mm/YYYY).
-
-```bash
-> contamehistorias --query "Donald Trump"
-
-
-2010-04-12 16:37:09 until 2011-05-19 00:23:39
-	filha de donald trump está grávida
-	quanto vale donald trump
-	donald trump deverá anunciar candidatura à casa branca
-
-2011-07-19 16:24:20 until 2015-11-21 19:54:41
-	donald trump vai apoiar mitt romney nas primárias
-	multimilionário donald trump apoia candidatura de mitt romney
-	multimilionário donald trump anuncia candidatura à corrida presidencial norte-americana
-
-2015-11-22 19:02:15 until 2016-09-30 01:20:27
-	donald trump quer proibir entrada de muçulmanos nos eua
-	obama graceja sobre possível discurso do estado da união de donald trump
-	deputados britânicos discutiram proibição de entrada donald trump no reino unido
-
-2015-11-22 19:02:15 until 2016-09-30 01:20:27
-	donald trump quer proibir entrada de muçulmanos nos eua
-	obama graceja sobre possível discurso do estado da união de donald trump
-	deputados britânicos discutiram proibição de entrada donald trump no reino unido
-```
-
-## Code Usage 
-
+### Obtain Results from Arquivo.pt
 Using ArquivoPT search engine API as datasource.
   
 ```python  
@@ -89,17 +40,35 @@ Using ArquivoPT search engine API as datasource.
   search_result = apt.getResult(query=query, **params)
 ```  
 
-Computing important dates and selecting relevant keyphrases
+### Iterate over the results obtained from Arquivo.pt
+"search_result" object belongs to the "contamehistorias.datasources.models.ResultHeadLine" class and returns the "raw" results from the Arquivo.pt API.
+
+```python
+#Total number of results retrieved by Arquivo.pt
+len(search_result)
+```
+
+Iterate over the entire set of retrieved results:
+```python
+for x in search_result:
+    print(x.datetime)
+    print(x.domain)
+    print(x.headline)
+    print(x.url)
+    print()
+```
+
+### Computing important dates and selecting relevant keyphrases/headlines
   
 ```python 
   
-  from contamehistorias import engine
-  language = "pt"
+from contamehistorias import engine
+language = "pt"
   
-  cont = contamehistorias.engine.TemporalSummarizationEngine()
-  intervals = cont.build_intervals(search_result, language)
+cont = engine.TemporalSummarizationEngine()
+summ_result = cont.build_intervals(search_result, language)
   
-  cont.pprint(intervals)
+cont.pprint(summ_result)
 	  
 ``` 
 Output
@@ -149,6 +118,24 @@ Output
  ``` 
 
 ## Iterate over response
+"summ_result" is a dictionary with 3 keys (`stats`, `domains`, `results`). "stats" is itself a dictionary; "domains" is a list and "results" is a list with several elements (namely dictionaries with detailed results).
+
+### stats
+"stats" is a dictionary consisting of 4 keys.
+
+```python
+summ_result["stats"]
+```
+
+### Domains
+Domains keeps the list of URIs in the search.
+
+ ```python
+ summ_result["domains"]
+ ```
+
+### Results
+summ_result ["results"] is a list that will have as many elements as there are relevant periods. Each of these relevant periods has a dictionary "from" (date) "to" (date) which enables to delimit the boundaries of the time-frame. Each time-period, in turn, has a number of keyphrases/headlines and corresponding information such as, the headline itself, its publication datetime (that is, the date when the webpage was collected by the Arquivo.pt), it's domain and URL.
 
  ```python
 summ_result = cont.build_intervals(search_result, language)
@@ -174,37 +161,91 @@ for period in summ_result["results"]:
 		
  ```
 
+In case you want to have information about the score of the terms that compose the headline, please run the following code:
+ ```python
+ for period in summ_result["results"]:
+       
+    print("--------------------------------")
+    print(period["from"],"until",period["to"])
+   
+    # selected headlines
+    keyphrases = period["keyphrases"]
+    
+    for keyphrase in keyphrases:
+        print("headline = " + keyphrase.kw)
+        
+       
+        # sources
+        for headline in keyphrase.headlines:
+            print("Date", headline.info.datetime)
+            print("Source", headline.info.domain)
+            print("Url", headline.info.url)
+            print("Headline completa = ", headline.info.headline)
+        
+        #Permite imprimir a importância de cada termo que faz parte da headline
+        for termos in keyphrase.cand_obj.terms:
+            print(f'{termos.unique_term} {termos.H}')
+           
+        print() 
+ ```
+ 
 ## Serialization
 Serializing results. Useful for caching.
 
-### Serializing search results
+### Serializing search results obtained from Arquivo.pt API
  ```python
+from contamehistorias.datasources.webarchive import ArquivoPT
+from datetime import datetime
+
+# Specify website and time frame to restrict your query
+domains = [ 'http://publico.pt/', 'http://www.rtp.pt/', 'http://www.dn.pt/', 'http://news.google.pt/',]
+
+params = { 'domains':domains, 'from':datetime(year=2016, month=3, day=1), 'to':datetime(year=2018, month=1, day=10) }
+  
+query = 'Dilma Rousseff'
+  
+apt =  ArquivoPT()
 search_result = apt.getResult(query=query, **params)
 
+import json
+
 # object to string
-search_result_serialized = apt.toStr(search_result) 
+search_result_serialized = apt.toStr(search_result)
 
 # string to object
 search_result = apt.toObj( search_result_serialized )
+
+print(search_result_serialized)
 ```
  
 ### Serializing summarization results
 ```python
+from contamehistorias import engine
+import datetime
+language = "pt"
+  
+cont = engine.TemporalSummarizationEngine()
+summ_result = cont.build_intervals(search_result, language)
+ 
 import json
 
-summ_result = conteme.build_intervals(search_result)
-
 # object to string
-summ_result_serialized = json.dumps(conteme.serialize(summ_result))
+summ_result_serialized = json.dumps(cont.serialize(summ_result))
 
 # string to object
 summ_result = json.loads(str(summ_result_serialized))
 ```
 
+```python
+print(summ_result_serialized)
+```
+
+```python
+print(summ_result)
+```
+
 ## Extending 
-You can extend it to use your own data source.  All you need to do is extend [BaseDataSource](contamehistorias/datasources/models.py) class. 
-Take a look at the example using [BingNewsSearchAPI](contamehistorias/datasources/bing.py).
-Method **getResult** must return list of object ResultHeadLine.
+You can extend Tell me Stories to use your own data source. All you need to do is to extend [BaseDataSource](contamehistorias/datasources/models.py) class. See the below code for informative purposes (don't need to execute it):
 
 ```python
 class BaseDataSource(object):
@@ -223,9 +264,103 @@ class BaseDataSource(object):
 		return [ ResultHeadLine.decoder(x) for x in json.loads(list_of_headlines_str) ]
 ```
 
-## NewsIR'16 dataset support
-It is possible to test using (http://research.signalmedia.co/newsir16/signal-dataset.html). In this case there is no need to specify date interval since the dataset comprehends only a one month time frame. 
+Take a look at the example using the [SignalMedia dataset](contamehistorias/datasources/signal.py), which is indexed at a solr machine. Method **getResult** must return a list of object ResultHeadLine.
+```python
+from contamehistorias.datasources import models
+from contamehistorias.datasources import utils
+from datetime import datetime
+import requests
+class CustomSignalNewsIRDataset(models.BaseDataSource):
+    URL_REQUEST = 'http://194.117.29.148/solr/signalnews-articles/select'
+    
+    def __init__(self, processes=4):
+        models.BaseDataSource.__init__(self, 'SignalNewsIRDataset')
+        self.processes = processes
 
+    def getResult(self, query, **kwargs):
+
+        params = {
+            'q':'title:(%s) OR content:(%s)' % (query, query),
+            'rows':2000,
+            'fl': 'source,title,published'
+        }
+
+        response = requests.get(CustomSignalNewsIRDataset.URL_REQUEST, params=params)
+        if response.status_code != 200:
+            return None
+
+        response_json = response.json()
+        results = []
+
+        for item in response_json['response']['docs']:
+
+            if not (item['title'][0]):
+                continue
+
+            domain_url = item["source"][0]
+            pubdate = datetime.strptime(item["published"][0], '%Y-%m-%dT%H:%M:%SZ')
+            title = item['title'][0]
+
+            item_result = models.ResultHeadLine(headline=title, datetime=pubdate, domain=domain_url, url="")
+
+            results.append( item_result )
+
+        return results
+```
+
+Now run the following code to get the results:
+```python
+from contamehistorias.datasources import models
+from contamehistorias import engine
+
+language = "en"
+query = "Donald Trump"
+
+search_result = CustomSignalNewsIRDataset().getResult(query=query)
+
+cont = engine.TemporalSummarizationEngine()
+summ_result = cont.build_intervals(search_result, language)
+  
+cont.pprint(summ_result,True)
+```
+## NewsIR'16 dataset support
+Given the previous code (which was shown for illustrative purposes) is already part of the package, you can use, instead, the following code to interact with the signal [media dataset](http://research.signalmedia.co/newsir16/signal-dataset.html) in a similar fashion as what was done for the Arquivo.pt API.  Note that given Signal media only covers one month no time-frame is specified.
+
+```python
+from contamehistorias.datasources.signal import SignalNewsIRDataset
+from contamehistorias.engine import TemporalSummarizationEngine
+from datetime import datetime
+ 
+query = 'Dilma Rousseff'
+language = 'en'
+
+signal =  SignalNewsIRDataset()
+search_result = signal.getResult(query=query)
+```
+
+Likewise the Arquivo.pt, one can interact with the raw results retrieved from the solr machine:
+```python
+len(search_result)
+```
+
+```python
+for x in search_result:
+    print(x.datetime)
+    print(x.domain)
+    print(x.headline)
+    print(x.url)
+    print()
+```
+
+As well as from the relevant headlines:
+```python
+cont = TemporalSummarizationEngine()
+summ_result = cont.build_intervals(search_result, language)
+  
+cont.pprint(summ_result,True)
+```
+
+From the cli:
 ```
 $ contamehistorias_signal --help
 Usage: contamehistorias_signal [OPTIONS]
@@ -239,6 +374,63 @@ Options:
 
   --help        Show this message and exit.
 
+```
+## Bing
+```python
+from contamehistorias.datasources.bing import BingNewsSearchAPI
+from contamehistorias.engine import TemporalSummarizationEngine
+from datetime import datetime
+
+language = "en"
+query = 'Brexit'
+key = "Introduce your KEY (from Microsoft Azure)"
+  
+bing =  BingNewsSearchAPI(key)
+search_result = bing.getResult(query=query)
+```
+
+## Usage (Command Line)
+
+Accessing client help
+
+```bash
+Usage: contamehistorias [OPTIONS]
+
+Options:
+  --query TEXT       Perform news retrieval with informed query
+  --language TEXT    Expected language in headlines
+  --start_date DATE  Perform news retrieval since this date
+  --end_date DATE    Perform news retrieval until this date
+  --domains TEXT     Comma separated list of domains (www.publico.pt,www.dn.pt)
+  --verbose          Gets detailed information
+  --help             Show this message and exit.
+```
+
+Running your query. You can specify start_date and end_date using date format (dd/mm/YYYY).
+
+```bash
+> contamehistorias --query "Donald Trump"
+
+
+2010-04-12 16:37:09 until 2011-05-19 00:23:39
+	filha de donald trump está grávida
+	quanto vale donald trump
+	donald trump deverá anunciar candidatura à casa branca
+
+2011-07-19 16:24:20 until 2015-11-21 19:54:41
+	donald trump vai apoiar mitt romney nas primárias
+	multimilionário donald trump apoia candidatura de mitt romney
+	multimilionário donald trump anuncia candidatura à corrida presidencial norte-americana
+
+2015-11-22 19:02:15 until 2016-09-30 01:20:27
+	donald trump quer proibir entrada de muçulmanos nos eua
+	obama graceja sobre possível discurso do estado da união de donald trump
+	deputados britânicos discutiram proibição de entrada donald trump no reino unido
+
+2015-11-22 19:02:15 until 2016-09-30 01:20:27
+	donald trump quer proibir entrada de muçulmanos nos eua
+	obama graceja sobre possível discurso do estado da união de donald trump
+	deputados britânicos discutiram proibição de entrada donald trump no reino unido
 ```
 
 ## Contact
