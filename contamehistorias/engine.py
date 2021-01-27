@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 
-from contamehistorias.datacore import DataCore
+from .datacore import DataCore
 
 from itertools import repeat
 from collections import Counter, namedtuple
 from os import path
 from scipy import signal
 from glob import glob
-from contamehistorias.Levenshtein import Levenshtein
+from .Levenshtein import Levenshtein
 import time
 import numpy as np
 from stop_words import get_stop_words
@@ -102,7 +102,7 @@ class TemporalSummarizationEngine(object):
 
 		return final_chunks
 
-	def build_intervals(self, resultset, lan):
+	def build_intervals(self, resultset, lan, query):
 		
 		if(len(resultset) == 0):
 			return
@@ -122,7 +122,7 @@ class TemporalSummarizationEngine(object):
 		domain_id = {}
 		all_key_candidates= {}
 		
-		array_of_ner = []
+		news_for_timeline = []
 		
 		for result in sorted_resultset:
 			document_candidates, term_in_doc = dc.add_document(result.headline)
@@ -132,7 +132,9 @@ class TemporalSummarizationEngine(object):
 			if proc_head.info.domain not in domain_id:
 				domain_id[proc_head.info.domain] = len(result_domains)
 				result_domains.append(proc_head.info.domain)
-					
+			
+			news_for_timeline.append( (str(proc_head.info.datetime), domain_id[proc_head.info.domain]) )
+
 			for cand, cand_obj in document_candidates.items():
 
 				if cand not in all_key_candidates:
@@ -144,7 +146,8 @@ class TemporalSummarizationEngine(object):
 					proc_head.candidates.append(all_key_candidates[cand])
 
 			processed_headline.append(proc_head)
-
+		
+		terms_correlations = [ (term_obj.unique_term, 1.-term_obj.bias) for term_obj in dc.add_bias(query)]
 		dc.build_single_terms_features()
 		dc.build_mult_terms_features()
 		
@@ -179,7 +182,8 @@ class TemporalSummarizationEngine(object):
 		total_time_spent = time.time() - processing_time
 		
 		dict_result = {
-
+			'query': query,
+			'status': 'OK',
 			'stats': {
 				'n_unique_docs': len(processed_headline), 
 				'n_docs':len(resultset), 
@@ -188,7 +192,9 @@ class TemporalSummarizationEngine(object):
 			},
 
 			'domains': result_domains,
+			'query_term_corr': terms_correlations[:self.top*2],
 			'results': general_array_results,
+			'news_for_timeline': news_for_timeline
 		}
 	
 		return dict_result
@@ -236,8 +242,12 @@ class TemporalSummarizationEngine(object):
 	
 	def serialize(self, result):
 		serialized = {
-			'domains':result['domains'],			
-			'stats':result['stats'],			
+			'query': result['query'],
+			'status': result['status'],
+			'domains':result['domains'],
+			'stats': result['stats'],
+			'query_term_corr': result['query_term_corr'],
+			'news_for_timeline': result['news_for_timeline']
 		}
 
 		serialized['results'] = []

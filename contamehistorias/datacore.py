@@ -88,6 +88,39 @@ class DataCore(object):
             return 0.
         return intersection_cardinality / float(union_cardinality)
 
+    def add_bias(self, query):
+        sentences_str = [ [w for w in split_contractions(web_tokenizer(s)) if not (w.startswith("'") and len(w) > 1) and len(w) > 0] for s in list(split_multi(query)) if len(s.strip()) > 0]
+
+        query_objs = {}
+        flatten = lambda l: [item for sublist in l for item in sublist]
+
+        for (sentence_id, sentence) in enumerate(sentences_str):
+            for (pos_sent, word) in enumerate(sentence):
+                if len([c for c in word if c in self.exclude]) != len(word):
+                    tag = self.get_tag(word, pos_sent)
+                    if tag not in self.tagsToDiscard:
+                        term_obj = self.get_term(word)
+                        if not term_obj.stopword and term_obj.unique_term not in query_objs:
+                            query_objs[term_obj.unique_term] = (term_obj, flatten([[ out_v for (in_v, out_v) in self.G.out_edges(term_obj.id) ], [ in_v for (in_v, out_v) in self.G.in_edges(term_obj.id) ]]))
+        if len(query_objs) == 0:
+            return []
+        to_mean = []
+        for term_obj in [t for t in self.term_vector if not t.stopword]:
+            term_occurs = term_obj.occurs.keys()
+            jac = 0.
+
+            term_context = flatten([[ out_v for (in_v, out_v) in self.G.out_edges(term_obj.id) ], [ in_v for (in_v, out_v) in self.G.in_edges(term_obj.id) ]])
+            context_jac = 0.
+            
+            for query_term_obj, query_term_context in query_objs.values():
+                jac += self.compute_jaccard_similarity_score(term_occurs, query_term_obj.occurs.keys())
+                context_jac += self.compute_jaccard_similarity_score(term_context, query_term_context)
+            if jac == 1. or  context_jac == 1.:
+                term_obj.bias *= 0.05
+            else:
+                term_obj.bias *= (1.-(jac/len(query_objs)))*(1.-(context_jac/len(query_objs)))
+        return sorted([t for t in self.term_vector if not t.stopword], key=lambda t: t.bias)
+
     def build_single_terms_features(self, features=None):
         validTerms = [ term for term in self.terms.values() if not term.stopword ]
         validTFs = (np.array([ x.tf for x in validTerms ]))
