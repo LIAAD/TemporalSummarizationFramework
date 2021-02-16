@@ -240,7 +240,7 @@ class TemporalSummarizationEngine(object):
 
 		return True			
 	
-	def serialize(self, result):
+	def serialize(self, result, tls_covid=False):
 		serialized = {
 			'query': result['query'],
 			'status': result['status'],
@@ -255,10 +255,18 @@ class TemporalSummarizationEngine(object):
 		for chunk in result['results']:
 			result_chunk = []
 			for result_key in chunk['keyphrases']:
-				result_chunk.append(
-					{ 'kw':result_key.cand_obj.kw,
+
+				data = { 
+					'kw': result_key.cand_obj.kw,
 					'date': str(min([ t.info.datetime for t in result_key.headlines if chunk['from'] <= t.info.datetime <= chunk['to']])), 
-					'docs':[ (t.info.headline, t.info.url) for t in result_key.headlines  ]  } )
+					'docs': [(t.info.headline, t.info.url) for t in result_key.headlines] 
+				}
+
+				if tls_covid:
+					data['title'] = str(result_key.headlines[0].info.title)
+					data['is_km'] = str(result_key.headlines[0].info.is_km)
+
+				result_chunk.append(data)
 
 			result_chunk = sorted(result_chunk, key=lambda kw_dict: kw_dict['date'] )
 			result_interval = { 'from':str(chunk['from']), 
