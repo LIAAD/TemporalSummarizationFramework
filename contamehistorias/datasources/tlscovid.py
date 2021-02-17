@@ -58,20 +58,68 @@ class ElasticSearchCovid(SearchEngine):
 
     INPUT_FORMAT = '%Y-%m-%d'
 
-
     def __init__(self):
         SearchEngine.__init__(self, 'ElasticSearchCovid')
 
-
     def getResult(self, query, **kwargs):
 
+        # kwargs must include index, and optionally a list of sources
+
         index = kwargs.get('index')
+
+        if 'sources' in kwargs:
+            sources = kwargs.get('sources')
+        else:
+            sources = []
 
         # Check if query is in topics
         topics = self.get_topics()
         index_topics = [t['topic'] for t in topics if t['lan'] == index]
 
         is_topic = query in index_topics
+
+        if not sources:
+            es_response = self.get_documents_from_query_by_index(
+                index, query, is_topic)
+        else:
+            es_response = self.get_documents_from_query_by_sources(
+                index, query, sources, is_topic)
+
+        result = []
+        for item in es_response:
+
+            item = item["_source"]
+
+            headline = item['news']
+
+            domain = urlparse(item['url']).netloc
+
+            # If query is topic there is a ground-truth timeline. Mark news accordingly if it is key moment or not.
+            if is_topic:
+                item_result = ResultHeadLine(headline=headline, datetime=datetime.strptime(
+                    item['date'], self.INPUT_FORMAT), title=item['title'], domain=domain, url=item['url'], is_km=item['is_km'])
+            # If query is not topic there is not a ground-truth timeline so do not mark any news as key moment.
+            else:
+                item_result = ResultHeadLine(headline=headline, datetime=datetime.strptime(
+                    item['date'], self.INPUT_FORMAT), title=item['title'], domain=domain, url=item['url'], is_km=False)
+
+            result.append(item_result)
+
+        print('Is topic:', str(is_topic))
+        print('Number of liveblog news:', str(len(result)))
+
+        if is_topic:
+            if not sources:
+                km_count = self.get_keymoments_count_by_index(index, query)
+            else:
+                km_count = self.get_keymoments_count_by_sources(
+                    index, query, sources)
+
+            print('Number of key moments:', str(km_count))
+
+        return result
+
+    def get_documents_from_query_by_index(self, index, query, is_topic):
 
         if is_topic:
             query_body = {
@@ -109,36 +157,59 @@ class ElasticSearchCovid(SearchEngine):
             query=query_body
         )
 
-        result = []
-        for item in es_response:
+        return es_response
 
-            item = item["_source"]
-
-            headline = item['news']
-
-            domain = urlparse(item['url']).netloc
-
-            # If query is topic there is a ground-truth timeline. Mark news accordingly if it is key moment or not.
-            if is_topic:
-                item_result = ResultHeadLine(headline=headline, datetime=datetime.strptime(
-                    item['date'], self.INPUT_FORMAT), title=item['title'], domain=domain, url=item['url'], is_km=item['is_km'])
-            # If query is not topic there is not a ground-truth timeline so do not mark any news as key moment.
-            else:
-                item_result = ResultHeadLine(headline=headline, datetime=datetime.strptime(
-                    item['date'], self.INPUT_FORMAT), title=item['title'], domain=domain, url=item['url'], is_km=False)
-
-            result.append(item_result)
-
-        print('Is topic:', str(is_topic))
-        print('Number of liveblog news:', str(len(result)))
+    def get_documents_from_query_by_sources(self, index, query, sources, is_topic):
 
         if is_topic:
-            print('Number of key moments:', str(self.get_keymoments_count(index, query)))
+            query_body = {
+                "query": {
+                    "bool": {
+                        "must": [
+                            {
+                                "match": {
+                                    "topic.keyword": query
+                                }
+                            },
+                            {
+                                "terms": {
+                                    "source": sources
+                                }
+                            }
+                        ]
+                    }
+                }
+            }
+        else:
+            query_body = {
+                "query": {
+                    "bool": {
+                        "must": [
+                            {
+                                "match": {
+                                    "news": query
+                                }
+                            },
+                            {
+                                "terms": {
+                                    "source": sources
+                                }
+                            }
+                        ]
+                    }
+                }
+            }
 
-        return result
+        # Query Elasticsearch
+        es_response = helpers.scan(
+            self.es,
+            index=index,
+            query=query_body
+        )
 
+        return es_response
 
-    def get_keymoments_count(self, index, query):
+    def get_keymoments_count_by_index(self, index, query):
 
         is_km = True
 
@@ -168,6 +239,40 @@ class ElasticSearchCovid(SearchEngine):
 
         return km_count
 
+    def get_keymoments_count_by_sources(self, index, query, sources):
+
+        is_km = True
+
+        query_body = {
+            "query": {
+                "bool": {
+                    "must": [
+                        {
+                            "match": {
+                                "topic.keyword": query
+                            }
+                        },
+                        {
+                            "match": {
+                                "is_km": is_km
+                            }
+                        },
+                        {
+                            "terms": {
+                                "source": sources
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+
+        # Query Elasticsearch
+        es_response = self.es.count(query_body, index)
+
+        km_count = es_response['count']
+
+        return km_count
 
     def get_all_indices(self):
 
@@ -180,10 +285,10 @@ class ElasticSearchCovid(SearchEngine):
         # Query Elasticsearch
         response = requests.get(es_indices_api_endpoint)
 
-        indices = [r['index'] for r in response.json() if r['index'] != 'topics']
+        indices = [r['index']
+                   for r in response.json() if r['index'] != 'topics']
 
         return indices
-
 
     def get_topics(self):
 
@@ -191,15 +296,14 @@ class ElasticSearchCovid(SearchEngine):
         es_response = helpers.scan(
             self.es,
             index='topics',
-            query={"query": { "match_all" : {}}}
+            query={"query": {"match_all": {}}}
         )
 
         topics = [t['_source'] for t in es_response]
 
         return topics
 
-
-    def get_topic_key_moments(self, index, topic):
+    def get_topic_key_moments_by_index(self, index, topic):
 
         is_km = True
 
@@ -242,6 +346,5 @@ class ElasticSearchCovid(SearchEngine):
                 topic_key_moments[news_date].append(news_body)
             else:
                 topic_key_moments[news_date] = [news_body]
-
 
         return topic_key_moments
