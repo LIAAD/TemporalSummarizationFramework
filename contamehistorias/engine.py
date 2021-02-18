@@ -158,16 +158,23 @@ class TemporalSummarizationEngine(object):
 		quality = []
 
 		for chunk in chunks:
+
 			from_chunk_datetime = chunk[0].info.datetime
 			to_chunk_datetime = chunk[-1].info.datetime
 			kws = set()
+			seen = set()
 			to_analyse = []
-
+			
 			for doc_proc in chunk:
-				for kw in doc_proc.candidates:
+				# Sort by relevance
+				cands = sorted(doc_proc.candidates, key=lambda x: x.cand_obj.H)
+				for kw in cands:
 					if kw.kw not in kws:
 						kws.add(kw.kw)
-						to_analyse.append(kw)
+						# Include only one entry per news
+						if doc_proc.info not in seen:
+							seen.add(doc_proc.info)
+							to_analyse.append(kw)
 
 			result_chunk, all_rank = self.extract_keyphrases(to_analyse)
 
