@@ -142,8 +142,8 @@ class TemporalSummarizationEngine(object):
 
 				all_key_candidates[cand].headlines.append(proc_head)
 
-				if cand_obj.is_valid():
-					proc_head.candidates.append(all_key_candidates[cand])
+				# if cand_obj.is_valid():
+				proc_head.candidates.append(all_key_candidates[cand])
 
 			processed_headline.append(proc_head)
 		
@@ -217,7 +217,7 @@ class TemporalSummarizationEngine(object):
 
 		return final_resultset
 
-	def extract_keyphrases(self, to_analyse, min_size=2):
+	def extract_keyphrases(self, to_analyse, min_size=4):
 		general_results = []
 		keywords = []
 		to_analyse = [ kw for kw in to_analyse if kw.cand_obj.size >= min_size ]

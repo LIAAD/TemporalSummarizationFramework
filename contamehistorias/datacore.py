@@ -11,6 +11,7 @@ import os
 import math
 import jellyfish
 import re
+import json
 
 class DataCore(object):
     
@@ -34,51 +35,55 @@ class DataCore(object):
     # TODO: Integrity, 
     def add_document(self, text):
         text = self.pre_filter(text)
-        sentences_str = [ [w for w in split_contractions(web_tokenizer(s)) if not (w.startswith("'") and len(w) > 1) and len(w) > 0] for s in list(split_multi(text)) if len(s.strip()) > 0]
-        self.number_of_sentences += len(sentences_str)
         self.number_of_documents += 1
         pos_text = 0
         document_candidates = {}
         term_in_doc = {}
-        sentences_obj = []
         block_of_word_obj = []
-        sentence_obj_aux = []
-        for (sentence_id, sentence) in enumerate(sentences_str):
-            sentence_obj_aux = []
-            block_of_word_obj = []
-            for (pos_sent, word) in enumerate(sentence):
-                if len([c for c in word if c in self.exclude]) == len(word): # If the word is based on exclude chars
-                    if len(block_of_word_obj) > 0:
-                        sentence_obj_aux.append( block_of_word_obj )
-                        cand = ComposedWord(block_of_word_obj)
-                        cand = self.add_or_update_composed_word(cand)
-                        if cand.unique_kw not in document_candidates:
-                            document_candidates[cand.unique_kw] = cand
-                        block_of_word_obj = []
-                else:
-                    tag = self.get_tag(word, pos_sent)
-                    term_obj = self.get_term(word)
-                    term_in_doc[term_obj.unique_term] = term_obj
-                    term_obj.add_occurrence(tag, sentence_id, pos_sent, pos_text, self.number_of_documents)
-                    pos_text += 1
-                    #Create co-occurrence matrix
-                    if tag not in self.tagsToDiscard:
-                        word_windows = list(range( max(0, len(block_of_word_obj)-self.windowsSize), len(block_of_word_obj) ))
-                        for w in word_windows:
-                            if block_of_word_obj[w][0] not in self.tagsToDiscard: 
-                                self.add_cooccurrence(block_of_word_obj[w][2], term_obj)              
 
-                    # Add term to the block of words' buffer
-                    block_of_word_obj.append( (tag, word, term_obj) )
-            if len(block_of_word_obj) > 0:
-                sentence_obj_aux.append( block_of_word_obj )
-            if len(sentence_obj_aux) > 0:
-                sentences_obj.append(sentence_obj_aux)
-        if len(block_of_word_obj) > 0:
-            sentence_obj_aux.append( block_of_word_obj )
-        if len(sentence_obj_aux) > 0:
-            sentences_obj.append(sentence_obj_aux)
-        self.number_of_words += pos_text
+        # Use a dictionary to map tokenized sentences (list of words) to original sentence
+        # To avoid reconstruct the sentence from the list of tokens
+        map_str_tokenized = {}
+        for s in list(split_multi(text)):
+            if len(s.strip()) > 0:
+                map_str_tokenized[json.dumps([w for w in split_contractions(web_tokenizer(s)) if not (w.startswith("'") and len(w) > 1) and len(w) > 0])] = s
+
+        self.number_of_sentences += len(map_str_tokenized)
+
+        # For each tokenized sentence
+        for (sentence_id, sentence) in enumerate(map_str_tokenized.keys()):
+
+            sentence = json.loads(sentence)
+
+            block_of_word_obj = []
+
+            # For each word in sentence
+            for (pos_sent, word) in enumerate(sentence):
+                
+                # Compute terms
+                tag = self.get_tag(word, pos_sent)
+                term_obj = self.get_term(word)
+                term_in_doc[term_obj.unique_term] = term_obj
+                term_obj.add_occurrence(tag, sentence_id, pos_sent, pos_text, self.number_of_documents)
+                pos_text += 1
+                #Create co-occurrence matrix
+                if tag not in self.tagsToDiscard:
+                    word_windows = list(range( max(0, len(block_of_word_obj)-self.windowsSize), len(block_of_word_obj) ))
+                    for w in word_windows:
+                        if block_of_word_obj[w][0] not in self.tagsToDiscard: 
+                            self.add_cooccurrence(block_of_word_obj[w][2], term_obj)           
+
+                # Add term to the block of words' buffer
+                block_of_word_obj.append( (tag, word, term_obj) )
+
+            self.number_of_words += pos_text
+
+            # Create candidate(s)
+            cand = ComposedWord(block_of_word_obj, map_str_tokenized[json.dumps(sentence)])
+            cand = self.add_or_update_composed_word(cand)
+            if cand.unique_kw not in document_candidates:
+                document_candidates[cand.unique_kw] = cand
+
         return document_candidates, term_in_doc
 
     def compute_jaccard_similarity_score(self, x, y):
@@ -203,15 +208,15 @@ class DataCore(object):
 
 class ComposedWord(object):
 
-    def __init__(self, terms): # [ (tag, word, term_obj) ]
+    def __init__(self, terms, sentence): # [ (tag, word, term_obj) ]
         if terms == None:
              self.start_or_end_stopwords = True
              self.tags = set()
              return
 
         self.tags = set([''.join([ w[0] for w in terms ])])
-        self.unique_kw = ' '.join( [ w[1].lower() for w in terms ] )
-        self.kw = ' '.join( [ w[1] for w in terms ] )
+        self.unique_kw = sentence.lower()
+        self.kw = sentence
         self.size = len(terms)
         self.terms = [ w[2] for w in terms if w[2] != None ]
         self.tf = 0.
@@ -224,10 +229,11 @@ class ComposedWord(object):
             self.tags.add( tag )
 
     def is_valid(self):
-        isValid = False
-        for tag in self.tags:
-            isValid = isValid or ( "u" not in tag and "d" not in tag )
-        return isValid and not self.start_or_end_stopwords
+        # isValid = False
+        # for tag in self.tags:
+        #     isValid = isValid or ( "u" not in tag and "d" not in tag )
+        # return isValid and not self.start_or_end_stopwords
+        return not self.start_or_end_stopwords
 
     def get_composed_feature(self, feature_name, discart_stopword=True):
         list_of_features = [ getattr(term, feature_name) for term in self.terms if ( discart_stopword and not term.stopword ) or not discart_stopword ]
