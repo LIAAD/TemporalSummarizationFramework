@@ -9,6 +9,7 @@ from multiprocessing import Pool
 from itertools import repeat
 from urllib.parse import urlparse
 import requests, json
+import re
 
 class ArquivoPT(BaseDataSource):
 	URL_REQUEST = 'http://arquivo.pt/textsearch'
@@ -21,6 +22,44 @@ class ArquivoPT(BaseDataSource):
 		self.processes = processes
 		self.docs_per_query = docs_per_query	
 	
+	def remove_noisy_strings(self, text):
+		noisy_strings = [
+			r'SIC Notícias (-|\|) ',
+			r' - SIC.*',
+			r'Expresso \| ',
+			r' - Exp.*',
+			r' > TVI24',
+			r' \| Econ.*',
+			r' \| DNOT.*',
+			r' - Notíc.*',
+			r' - Notic.*',
+			r' - TSF',
+			r' - Jornal.*',
+			r'Sol - ',
+			r' - Sol',
+			r' - Sábado',
+			r' - SÁBADO',
+			r' (-|—) SAP.*',
+			r' (-|—) Sap.*',
+			r' - Agê.*',
+			r' \| iOn',
+			r' - AEIOU.pt',
+			r' (-|\|) PÚBLICO',
+			r' - PUB.*',
+			r' - PÚB.*',
+			r' - RTP.*',
+			r' - Dinheiro Vivo',
+			r' - Correio.*',
+			r'Lux - ',
+			r'IOL Música - ',
+			r' - Fotos'
+		]
+
+		for ns in noisy_strings:
+			text = re.sub(ns, '', text)
+
+		return text
+
 	def getResult(self, query, **kwargs):
 		domains = kwargs['domains']
 		
@@ -80,6 +119,8 @@ class ArquivoPT(BaseDataSource):
 
 			if 'Ã' in item['title']:
 				item['title'] = multiple_replace(item['title'])
+
+			item['title'] = self.remove_noisy_strings(item['title'])
 
 			try:
 				item_result = ResultHeadLine(headline=item['title'], 
