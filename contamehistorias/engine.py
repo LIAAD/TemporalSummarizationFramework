@@ -11,6 +11,8 @@ from .Levenshtein import Levenshtein
 import time
 import numpy as np
 from stop_words import get_stop_words
+import multiprocessing
+from joblib import Parallel, delayed
 
 ProcessedHeadline = namedtuple('ProcessedHeadline', ['info', 'candidates', 'terms'])
 Keyphrase = namedtuple('Keyphrase', ['kw', 'cand_obj', 'headlines'])
@@ -102,6 +104,36 @@ class TemporalSummarizationEngine(object):
 
 		return final_chunks
 
+	def proc_chunk(self, chunk):
+
+		from_chunk_datetime = chunk[0].info.datetime
+		to_chunk_datetime = chunk[-1].info.datetime
+		kws = set()
+		seen = set()
+		to_analyse = []
+		
+		for doc_proc in chunk:
+			# Sort by relevance
+			cands = sorted(doc_proc.candidates, key=lambda x: x.cand_obj.H)
+			for kw in cands:
+				if kw.kw not in kws:
+					kws.add(kw.kw)
+					# Include only one entry per news
+					if doc_proc.info not in seen:
+						seen.add(doc_proc.info)
+						to_analyse.append(kw)
+
+		result_chunk, _ = self.extract_keyphrases(to_analyse)
+
+		result_interval = { 
+			'from':from_chunk_datetime, 
+			'to':to_chunk_datetime, 
+			'n_docs': len(chunk), 
+			'keyphrases': result_chunk 
+		}
+
+		return result_interval
+
 	def build_intervals(self, resultset, lan, query):
 		
 		if(len(resultset) == 0):
@@ -142,8 +174,8 @@ class TemporalSummarizationEngine(object):
 
 				all_key_candidates[cand].headlines.append(proc_head)
 
-				# if cand_obj.is_valid():
-				proc_head.candidates.append(all_key_candidates[cand])
+				if cand_obj.is_valid():
+					proc_head.candidates.append(all_key_candidates[cand])
 
 			processed_headline.append(proc_head)
 		
@@ -152,39 +184,15 @@ class TemporalSummarizationEngine(object):
 		dc.build_mult_terms_features()
 		
 		chunks = self.get_chunk(processed_headline)
-		
-		all_rank=[]
+
+		# Parallelize chunks processing
+		num_cores = multiprocessing.cpu_count()
+
+		if num_cores > 1:
+			num_cores = int(num_cores/2)
+
 		general_array_results = []
-		quality = []
-
-		for chunk in chunks:
-
-			from_chunk_datetime = chunk[0].info.datetime
-			to_chunk_datetime = chunk[-1].info.datetime
-			kws = set()
-			seen = set()
-			to_analyse = []
-			
-			for doc_proc in chunk:
-				# Sort by relevance
-				cands = sorted(doc_proc.candidates, key=lambda x: x.cand_obj.H)
-				for kw in cands:
-					if kw.kw not in kws:
-						kws.add(kw.kw)
-						# Include only one entry per news
-						if doc_proc.info not in seen:
-							seen.add(doc_proc.info)
-							to_analyse.append(kw)
-
-			result_chunk, all_rank = self.extract_keyphrases(to_analyse)
-
-			result_interval = { 'from':from_chunk_datetime, 
-								'to':to_chunk_datetime, 
-								'n_docs': len(chunk), 
-								'keyphrases': result_chunk 
-							  }
-
-			general_array_results.append(result_interval)
+		general_array_results.extend(Parallel(n_jobs=num_cores)(delayed(self.proc_chunk)(chunk) for chunk in chunks))
 		
 		total_time_spent = time.time() - processing_time
 		
