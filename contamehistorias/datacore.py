@@ -233,7 +233,7 @@ class ComposedWord(object):
         # for tag in self.tags:
         #     isValid = isValid or ( "u" not in tag and "d" not in tag )
         # return isValid and not self.start_or_end_stopwords
-        return not self.start_or_end_stopwords
+        return True
 
     def get_composed_feature(self, feature_name, discart_stopword=True):
         list_of_features = [ getattr(term, feature_name) for term in self.terms if ( discart_stopword and not term.stopword ) or not discart_stopword ]
@@ -249,12 +249,14 @@ class ComposedWord(object):
                 continue
             if term_base.stopword:
                 prob_t1 = 0.
-                if term_base.G.has_edge(self.terms[t-1].id, self.terms[ t ].id):
-                    prob_t1 = term_base.G[self.terms[t-1].id][self.terms[ t ].id]["TF"] / self.terms[t-1].tf
+                if t > 0:
+                    if term_base.G.has_edge(self.terms[t-1].id, self.terms[ t ].id):
+                        prob_t1 = term_base.G[self.terms[t-1].id][self.terms[ t ].id]["TF"] / self.terms[t-1].tf
 
                 prob_t2 = 0.
-                if term_base.G.has_edge(self.terms[ t ].id, self.terms[t+1].id):
-                    prob_t2 = term_base.G[self.terms[ t ].id][self.terms[t+1].id]["TF"] / self.terms[t+1].tf
+                if t < len(self.terms)-1:
+                    if term_base.G.has_edge(self.terms[ t ].id, self.terms[t+1].id):
+                        prob_t2 = term_base.G[self.terms[ t ].id][self.terms[t+1].id]["TF"] / self.terms[t+1].tf
 
                 prob = prob_t1 * prob_t2
                 prod_H *= (1 + (1 - prob ) )
