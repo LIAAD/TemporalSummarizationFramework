@@ -103,7 +103,7 @@ class ArquivoPT(BaseDataSource):
 			'to':interval[1],
 			'siteSearch':siteSearch,
 			'maxItems':self.docs_per_query,
-			'itemsPerSite':itemsPerSite,
+			'dedupValue':itemsPerSite,
 			'type':'html',
 			'fields': 'originalURL,title,tstamp,encoding,linkToArchive'
 		}
