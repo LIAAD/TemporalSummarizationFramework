@@ -22,42 +22,52 @@ class ArquivoPT(BaseDataSource):
 		self.processes = processes
 		self.docs_per_query = docs_per_query	
 	
-	def remove_noisy_strings(self, text):
-		noisy_strings = [
-			r'SIC Notícias (-|\|) ',
-			r' - SIC.*',
-			r'Expresso \| ',
-			r' - Exp.*',
-			r' > TVI24',
-			r' \| Econ.*',
-			r' \| DNOT.*',
-			r' - Notíc.*',
-			r' - Notic.*',
-			r' - TSF',
-			r' - Jornal.*',
-			r'Sol - ',
-			r' - Sol',
-			r' - Sábado',
-			r' - SÁBADO',
-			r' (-|—) SAP.*',
-			r' (-|—) Sap.*',
-			r' - Agê.*',
-			r' \| iOn',
-			r' - AEIOU.pt',
-			r' (-|\|) PÚBLICO',
-			r' - PUB.*',
-			r' - PÚB.*',
-			r' - RTP.*',
-			r' - Dinheiro Vivo',
-			r' - Correio.*',
-			r'Lux - ',
-			r'IOL Música - ',
-			r' - Fotos'
-		]
+	def _select_text_to_keep(self, text, search_result, loc):
+		# Whole match
+		match = search_result.group(0)
+		# Get original text without match
+		without_match = text.replace(match, '')
 
-		for ns in noisy_strings:
-			text = re.sub(ns, '', text)
+		# This is an heuristic
+		# Usually we are interested in the biggest string
+		if len(match) > len(without_match):
+			# This is the match without the noise delimiter
+			if loc == 'beginning':
+				text = search_result.group(1)
+			elif loc == 'end':
+				text = search_result.group(2)
+		else:
+			text = without_match
+		
+		return text
 
+	def _pre_proc_title(self, text):
+
+		# Remove soft hyphens
+		text = text.replace('\xad', '')
+		text = text.replace('\u00ad', '')
+
+		# Titles come with noise in the beginning or end or in the begginig and end
+		# Usually this noisy is delimited by chars like - | — > :
+
+		# Regex to match noise in the beginning of titles
+		regex_beg = re.compile(r'^([\"\w\s\/\']+)(-|—|\||>|:)\s', flags=re.UNICODE)
+
+		search_result_beg = regex_beg.search(text)
+		if search_result_beg:
+			text = self._select_text_to_keep(text, search_result_beg, 'beginning')
+
+		# Regex to match noise in the end of titles
+		regex_end = re.compile(r'(-|—|\||>|\/)\s([\(\w\.\,\s\-\/\&\'\)]*)$', flags=re.UNICODE)
+
+		search_result_end = regex_end.search(text)
+
+		# Sometimes there is more than one noisy string at the end
+		while search_result_end:
+			text = self._select_text_to_keep(text, search_result_end, 'end')
+
+			search_result_end = regex_end.search(text)
+		
 		return text
 
 	def getResult(self, query, **kwargs):
@@ -117,10 +127,11 @@ class ArquivoPT(BaseDataSource):
 
 			url_domain = urlparse(item['originalURL']).netloc
 
+			# Preprocess titles
 			if 'Ã' in item['title']:
 				item['title'] = multiple_replace(item['title'])
 
-			item['title'] = self.remove_noisy_strings(item['title'])
+			item['title'] = self._pre_proc_title(item['title'])
 
 			try:
 				item_result = ResultHeadLine(headline=item['title'], 
