@@ -85,12 +85,23 @@ class ElasticSearchCovid(SearchEngine):
             es_response = self.get_documents_from_query_by_sources(
                 index, query, sources, is_topic)
 
+        search_results = list(es_response)
+
+        # Using whole news is computationally expensive
+        # If large response (>2000 items) and not topic, use only titles
+        use_titles = False
+        if len(search_results) > 2000 and not is_topic:
+            use_titles = True
+
         result = []
-        for item in es_response:
+        for item in search_results:
 
             item = item["_source"]
 
-            headline = item['news']
+            if not use_titles:
+                headline = item['news']
+            else:
+                headline = item['title']
 
             domain = urlparse(item['url']).netloc
 
