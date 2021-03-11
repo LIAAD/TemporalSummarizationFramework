@@ -170,8 +170,8 @@ class DataCore(object):
     def get_term(self, str_word, save_non_seen=True):
         unique_term = str_word.lower()
         simples_sto = unique_term in self.stopword_set
-        if unique_term.endswith('s') and len(unique_term) > 3:
-            unique_term = unique_term[:-1]
+        # if unique_term.endswith('s') and len(unique_term) > 3:
+        #     unique_term = unique_term[:-1]
 
         if unique_term in self.terms:
             return self.terms[unique_term]
