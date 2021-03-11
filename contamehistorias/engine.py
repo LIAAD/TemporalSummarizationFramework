@@ -16,6 +16,7 @@ from joblib import Parallel, delayed
 
 ProcessedHeadline = namedtuple('ProcessedHeadline', ['info', 'candidates', 'terms'])
 Keyphrase = namedtuple('Keyphrase', ['kw', 'cand_obj', 'headlines'])
+Term = namedtuple('Term', ['term', 'tf', 'h'])
 
 class TemporalSummarizationEngine(object):
 	
@@ -134,7 +135,7 @@ class TemporalSummarizationEngine(object):
 
 		return result_interval
 
-	def build_intervals(self, resultset, lan, query):
+	def build_intervals(self, resultset, lan, query, top_terms=20):
 		
 		if(len(resultset) == 0):
 			return
@@ -183,6 +184,12 @@ class TemporalSummarizationEngine(object):
 		dc.build_single_terms_features()
 		dc.build_mult_terms_features()
 		
+		# get top_terms most relevant terms (smaller H), excluding stopwords
+		# term is namedtuple Term
+		most_relevant_terms = [Term(term=t, tf=sw.tf, h=sw.H) for t, sw in dc.terms.items() if not sw.stopword]
+		most_relevant_terms = sorted(most_relevant_terms, key=lambda term: term.h)
+		most_relevant_terms = most_relevant_terms[:top_terms]
+
 		chunks = self.get_chunk(processed_headline)
 
 		# Parallelize chunks processing
@@ -209,7 +216,8 @@ class TemporalSummarizationEngine(object):
 			'domains': result_domains,
 			'query_term_corr': terms_correlations[:self.top*2],
 			'results': general_array_results,
-			'news_for_timeline': news_for_timeline
+			'news_for_timeline': news_for_timeline,
+			'most_relevant_terms': most_relevant_terms
 		}
 	
 		return dict_result
@@ -262,7 +270,8 @@ class TemporalSummarizationEngine(object):
 			'domains':result['domains'],
 			'stats': result['stats'],
 			'query_term_corr': result['query_term_corr'],
-			'news_for_timeline': result['news_for_timeline']
+			'news_for_timeline': result['news_for_timeline'],
+			'most_relevant_terms': result['most_relevant_terms']
 		}
 
 		serialized['results'] = []
