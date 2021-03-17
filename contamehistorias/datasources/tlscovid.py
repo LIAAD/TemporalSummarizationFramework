@@ -359,3 +359,86 @@ class ElasticSearchCovid(SearchEngine):
                 topic_key_moments[news_date] = [news_body]
 
         return topic_key_moments
+
+    def get_documents_from_query_by_sources_in_date_range(self, index, query, sources, start_date, end_date):
+
+        query_body = {
+            "query": {
+                "bool": {
+                    "must": [
+                        {
+                            "match": {
+                                "topic.keyword": query
+                            }
+                        },
+                        {
+                            "terms": {
+                                "source": sources
+                            }
+                        },
+                        {
+                            "range": {
+                                "date": {
+                                    "gte": datetime.strptime(start_date, "%Y-%m-%d"),
+                                    "lte": datetime.strptime(end_date, "%Y-%m-%d")
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+
+        # Query Elasticsearch
+        es_response = helpers.scan(
+            self.es,
+            index=index,
+            query=query_body
+        )
+
+        return list(es_response)
+
+    def get_key_moments_from_query_by_sources_in_date_range(self, index, query, sources, start_date, end_date):
+        
+        is_km = True
+
+        query_body = {
+            "query": {
+                "bool": {
+                    "must": [
+                        {
+                            "match": {
+                                "topic.keyword": query
+                            }
+                        },
+                        {
+                            "terms": {
+                                "source": sources
+                            }
+                        },
+                        {
+                            "range": {
+                                "date": {
+                                    "gte": datetime.strptime(start_date, "%Y-%m-%d"),
+                                    "lte": datetime.strptime(end_date, "%Y-%m-%d")
+                                }
+                            }
+                        },
+                        {
+                            "match": {
+                                "is_km": is_km
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+
+        # Query Elasticsearch
+        es_response = helpers.scan(
+            self.es,
+            index=index,
+            query=query_body
+        )
+        
+        return list(es_response)
