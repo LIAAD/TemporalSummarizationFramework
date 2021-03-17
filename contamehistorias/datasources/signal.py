@@ -6,7 +6,7 @@ from datetime import datetime
 import requests
 
 class SignalNewsIRDataset(BaseDataSource):
-	URL_REQUEST = 'http://194.117.29.148/solr/signalnews-articles/select'
+	URL_REQUEST = 'http://194.117.29.148:8983/solr/signalnews-articles/select'
 	
 	def __init__(self, processes=4):
 		BaseDataSource.__init__(self, 'SignalNewsIRDataset')
