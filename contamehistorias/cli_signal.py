@@ -25,7 +25,7 @@ def main(query, verbose):
 
     click.echo("Computing temporal summarization ...")
     engine = TemporalSummarizationEngine()
-    summary_result = engine.build_intervals(search_result, "en")
+    summary_result = engine.build_intervals(search_result, "en", query)
 
     engine.pprint(summary_result, verbose)
     
