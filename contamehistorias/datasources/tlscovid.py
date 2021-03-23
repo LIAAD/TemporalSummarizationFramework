@@ -87,31 +87,20 @@ class ElasticSearchCovid(SearchEngine):
 
         search_results = list(es_response)
 
-        # Using whole news is computationally expensive
-        # If large response (>2000 items) and not topic, use only titles
-        use_titles = False
-        if len(search_results) > 2000 and not is_topic:
-            use_titles = True
-
         result = []
         for item in search_results:
 
             item = item["_source"]
 
-            if not use_titles:
-                headline = item['news']
-            else:
-                headline = item['title']
-
             domain = urlparse(item['url']).netloc
 
             # If query is topic there is a ground-truth timeline. Mark news accordingly if it is key moment or not.
             if is_topic:
-                item_result = ResultHeadLine(headline=headline, datetime=datetime.strptime(
+                item_result = ResultHeadLine(headline=item['news'], datetime=datetime.strptime(
                     item['date'], self.INPUT_FORMAT), title=item['title'], domain=domain, url=item['url'], is_km=item['is_km'])
             # If query is not topic there is not a ground-truth timeline so do not mark any news as key moment.
             else:
-                item_result = ResultHeadLine(headline=headline, datetime=datetime.strptime(
+                item_result = ResultHeadLine(headline=item['news'], datetime=datetime.strptime(
                     item['date'], self.INPUT_FORMAT), title=item['title'], domain=domain, url=item['url'], is_km=False)
 
             result.append(item_result)

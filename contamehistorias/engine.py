@@ -135,7 +135,7 @@ class TemporalSummarizationEngine(object):
 
 		return result_interval
 
-	def build_intervals(self, resultset, lan, query, top_terms=20):
+	def build_intervals(self, resultset, lan, query, use_headline=True, top_terms=20):
 		
 		if(len(resultset) == 0):
 			return
@@ -143,7 +143,7 @@ class TemporalSummarizationEngine(object):
 		processing_time = time.time()
 		
 		sorted_resultset = sorted(resultset, key=lambda x: x.datetime)
-		sorted_resultset = self.evaluate_unique_headlines(sorted_resultset)
+		sorted_resultset = self.evaluate_unique_headlines(sorted_resultset, use_headline=use_headline)
 		
 		stopwords = get_stop_words(lan)
 		
@@ -156,9 +156,13 @@ class TemporalSummarizationEngine(object):
 		all_key_candidates= {}
 		
 		news_for_timeline = []
-		
+
 		for result in sorted_resultset:
-			document_candidates, term_in_doc = dc.add_document(result.headline)
+			# Set use_headline to False to use titles in tls-covid (ONLY in tls-covid, or datasets where both headline and title exist in ResultHeadline)
+			if use_headline:
+				document_candidates, term_in_doc = dc.add_document(result.headline)
+			else:
+				document_candidates, term_in_doc = dc.add_document(result.title)
 		
 			proc_head = ProcessedHeadline(info=result, candidates=[], terms=term_in_doc)
 
@@ -222,14 +226,19 @@ class TemporalSummarizationEngine(object):
 	
 		return dict_result
 
-	def evaluate_unique_headlines(self, resultset):
+	def evaluate_unique_headlines(self, resultset, use_headline=True):
 		final_resultset = []
 		unique_headlines = set()
 
 		for hl in resultset:
-			if hl.headline not in unique_headlines:
-				unique_headlines.add(hl.headline)
-				final_resultset.append(hl)
+			if use_headline:
+				if hl.headline not in unique_headlines:
+					unique_headlines.add(hl.headline)
+					final_resultset.append(hl)
+			else:
+				if hl.title not in unique_headlines:
+					unique_headlines.add(hl.title)
+					final_resultset.append(hl)
 
 		return final_resultset
 
