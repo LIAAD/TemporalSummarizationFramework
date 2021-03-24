@@ -124,28 +124,19 @@ class ElasticSearchCovid(SearchEngine):
         if is_topic:
             query_body = {
                 "query": {
-                    "bool": {
-                        "must": [
-                            {
-                                "match": {
-                                    "topic.keyword": query
-                                }
-                            }
-                        ]
+                    "match": {
+                        "topic.keyword": query
                     }
                 }
             }
         else:
             query_body = {
                 "query": {
-                    "bool": {
-                        "must": [
-                            {
-                                "match": {
-                                    "news": query
-                                }
-                            }
-                        ]
+                    "match": {
+                        "news": {
+                            "query": query,
+                            "operator": "and"
+                        }
                     }
                 }
             }
@@ -187,7 +178,10 @@ class ElasticSearchCovid(SearchEngine):
                         "must": [
                             {
                                 "match": {
-                                    "news": query
+                                    "news": {
+                                        "query": query,
+                                        "operator": "and"
+                                    }
                                 }
                             },
                             {
