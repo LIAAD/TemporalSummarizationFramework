@@ -87,7 +87,7 @@ class TemporalSummarizationEngine(object):
 		
 		chunks.append(atual_chunk)
 		
-		min_size_chunk = max(50, percent * max([ len(chunk) for chunk in chunks ]), percent * len(sorted_resultset) )
+		min_size_chunk = max(10, percent * max([ len(chunk) for chunk in chunks ]), percent * len(sorted_resultset) )
 		final_chunks = []
 		atual_chunk = []
 		
