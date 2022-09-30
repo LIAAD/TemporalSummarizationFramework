@@ -12,4 +12,4 @@ Click>=6.0
 click_datetime==0.2
 stop-words
 mediacloud
-joblib==1.0.1
+joblib==1.2.0
