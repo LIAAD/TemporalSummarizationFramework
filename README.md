@@ -66,7 +66,7 @@ from contamehistorias import engine
 language = "pt"
   
 cont = engine.TemporalSummarizationEngine()
-summ_result = cont.build_intervals(search_result, language)
+summ_result = cont.build_intervals(search_result, language, query)
   
 cont.pprint(summ_result)
 	  
@@ -438,7 +438,7 @@ arrp@inesctec.pt
 vitordouzi@gmail.com
 ricardo.campos@ipt.pt
 
-Developed by researchers from Laboratório de Inteligência Artificial e Apoio a Decisão (LIAAD - INESCTEC), and affiliated to Instituto Politécnico de Tomar ; Universidade do Porto; Universidade de Kyoto
+Developed by researchers from Laboratório de Inteligência Artificial e Apoio a Decisão (LIAAD - INESCTEC), and affiliated to the Universidade da Beira Interior; Universidade do Porto; Universidade de Kyoto
 
 ## Please cite the following works when using Conta-me Histórias/Tell me Stories
 Pasquali, A., Mangaravite, V., Campos, R., Jorge, A., and Jatowt, A. (2019). Interactive System for Automatically Generating Temporal Narratives. In: Azzopardi L., Stein B., Fuhr N., Mayr P., Hauff C., Hiemstra D. (eds), Advances in Information Retrieval. ECIR'19 (Cologne, Germany. April 14 – 18). Lecture Notes in Computer Science, vol 11438, pp. 251 - 255. Springer. [pdf](https://link.springer.com/chapter/10.1007/978-3-030-15719-7_34)
