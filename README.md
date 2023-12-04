@@ -138,7 +138,7 @@ Domains keeps the list of URIs in the search.
 summ_result ["results"] is a list that will have as many elements as there are relevant periods. Each of these relevant periods has a dictionary "from" (date) "to" (date) which enables to delimit the boundaries of the time-frame. Each time-period, in turn, has a number of keyphrases/headlines and corresponding information such as, the headline itself, its publication datetime (that is, the date when the webpage was collected by the Arquivo.pt), it's domain and URL.
 
  ```python
-summ_result = cont.build_intervals(search_result, language)
+summ_result = cont.build_intervals(search_result, language, query)
 
 for period in summ_result["results"]:
     
@@ -225,7 +225,7 @@ import datetime
 language = "pt"
   
 cont = engine.TemporalSummarizationEngine()
-summ_result = cont.build_intervals(search_result, language)
+summ_result = cont.build_intervals(search_result, language, query)
  
 import json
 
@@ -319,7 +319,7 @@ query = "Donald Trump"
 search_result = CustomSignalNewsIRDataset().getResult(query=query)
 
 cont = engine.TemporalSummarizationEngine()
-summ_result = cont.build_intervals(search_result, language)
+summ_result = cont.build_intervals(search_result, language, query)
   
 cont.pprint(summ_result,True)
 ```
@@ -355,7 +355,7 @@ for x in search_result:
 As well as from the relevant headlines:
 ```python
 cont = TemporalSummarizationEngine()
-summ_result = cont.build_intervals(search_result, language)
+summ_result = cont.build_intervals(search_result, language, query)
   
 cont.pprint(summ_result,True)
 ```
